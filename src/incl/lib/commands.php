@@ -193,7 +193,15 @@ class Commands {
 			$query->execute([':value' => $commentarray[1], ':timestamp' => $uploadDate, ':id' => $accountID, ':levelID' => $levelID]);
 			return true;
 		}
-
+		if (substr($comment, 0, 13) == '!setlinknexus' AND $gs->checkPermission($accountID, "commandSetacc")) {
+			if (empty($commentarray[1]) or !is_numeric($commentarray[1]))
+				$linkNexusID = $levelID;
+			else
+				$linkNexusID = $commentarray[1];
+			$gs->setLinkNexusLevel($linkNexusID);
+			$this->createBotComment("!setlinknexus success: The link nexus has been set to level ID '" . $linkNexusID . "'.", $userID, $levelID);
+			return true;
+		}
 		
 		// NON-ADMIN COMMANDS
 		if(self::ownCommand($comment, "rename", $accountID, $targetExtID)){
@@ -279,13 +287,15 @@ class Commands {
 		}
 		return false;
 	}
-	public static function doLinkNexusCommands($UDID, $legacyID, $userID, $comment) {
+	public static function doLinkNexusCommands($UDID, $legacyID, $comment) {
 		include dirname(__FILE__)."/../lib/connection.php";
 		require_once "../lib/exploitPatch.php";
 		require_once "../lib/mainLib.php";
 		$gs = new mainLib();
+		
 		require "../../config/linking.php";
 		require "../../config/discord.php";
+		$userID = $legacyID ? $gs->getUserID($legacyID) : $gs->getUserID($UDID);
 		$commentarray = explode(' ', $comment);
 		
 		if (substr($comment, 0, 5) == '!link') {

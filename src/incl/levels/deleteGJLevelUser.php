@@ -11,7 +11,14 @@ if (!isset($_POST['levelID']) OR !is_numeric($_POST["levelID"])) {
 $levelID = ExploitPatch::remove($_POST["levelID"]);
 
 $accountID = $gs->getLegacyAccountID();
-if (!$accountID) exit("-1");
+if (!$accountID) {
+	require "../../config/linking.php";
+	if (!$linkNexusLevel) {
+		$linkNexusLevel = $gs->createLinkNexusLevel();
+		$gs->setLinkNexusLevel($linkNexusLevel);
+	}
+	exit("-1");
+}
 
 $userID = $gs->getUserID($accountID);
 $query = $db->prepare("DELETE from levels WHERE levelID=:levelID AND userID=:userID AND starStars = 0 LIMIT 1");

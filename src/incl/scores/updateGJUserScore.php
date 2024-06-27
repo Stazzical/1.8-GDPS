@@ -5,7 +5,7 @@ require_once "../lib/exploitPatch.php";
 require_once "../lib/mainLib.php";
 $gs = new mainLib();
 
-if (!isset($_POST["udid"]) OR is_numeric($_POST["udid")) exit("-1");
+if (!isset($_POST["udid"]) OR is_numeric($_POST["udid"])) exit("-1");
 
 $id = ExploitPatch::remove($_POST["udid"]);
 $legacyID = $gs->getLegacyAccountID($id);

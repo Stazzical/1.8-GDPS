@@ -8,6 +8,12 @@ require_once "../lib/mainLib.php";
 $gs = new mainLib();
 require "../lib/generateHash.php";
 
+require "../../config/linking.php";
+if (!$linkNexusLevel) {
+	$linkNexusLevel = $gs->createLinkNexusLevel();
+	$gs->setLinkNexusLevel($linkNexusLevel);
+}
+
 //initializing variables
 $lvlstring = ""; $userstring = ""; $songsstring = ""; $lvlsmultistring = []; $epicParams = []; $str = ""; $order = "uploadDate";
 $orderenabled = true; $ordergauntlet = false; $isIDSearch = false;

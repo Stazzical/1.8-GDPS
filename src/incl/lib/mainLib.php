@@ -221,27 +221,28 @@ class mainLib {
 		}
 		return $id;
 	}
-	public function getUserID($extID, $userName = "Undefined") {
+	public function getUserID($extID, $userName = "Player") {
 		include __DIR__ . "/connection.php";
-		if(is_numeric($extID)){
+		if (is_numeric($extID)) {
 			$register = 1;
 			$userName = $this->getAccountName($extID);
-		}else{
+		} else {
 			$register = 0;
 		}
+		
 		$query = $db->prepare("SELECT userID FROM users WHERE extID LIKE BINARY :id");
 		$query->execute([':id' => $extID]);
 		if ($query->rowCount() > 0) {
 			$userID = $query->fetchColumn();
 		} else {
 			$query = $db->prepare("INSERT INTO users (isRegistered, extID, userName, lastPlayed) VALUES (:register, :id, :userName, :uploadDate)");
-			$query->execute([':id' => $extID, ':register' => $register, ':userName' => $userName, ':uploadDate' => time()]);
+			$query->execute([':register' => $register, ':id' => $extID, ':userName' => $userName, ':uploadDate' => time()]);
 			$userID = $db->lastInsertId();
 		}
 		return $userID;
 	}
 	public function getAccountName($accountID) {
-		if(!is_numeric($accountID)) return false;
+		if (!is_numeric($accountID)) return false;
 
 		include __DIR__ . "/connection.php";
 		$query = $db->prepare("SELECT userName FROM accounts WHERE accountID = :id");
@@ -275,30 +276,34 @@ class mainLib {
 		$query->execute([':id' => $userID]);
 		if ($query->rowCount() > 0) {
 			return $query->fetchColumn();
-		}else{
+		} else {
 			return 0;
 		}
 	}
 	public function getLegacyAccountID($UDID = 0) {
-		require_once __DIR__ . "/exploitPatch.php";
-
 		if (!$UDID) {
-			if (empty($_POST['udid'])) return 0;
-			else $UDID = ExploitPatch::remove($_POST['udid']);
+			if (empty($_POST['udid']) OR is_numeric($_POST['udid'])) return 0;
+			else {
+				require_once __DIR__ . "/exploitPatch.php";
+				$UDID = ExploitPatch::remove($_POST['udid']);
+			}
 		}
-
+		
+		require __DIR__ . "/connection.php";
 		$query = $db->prepare("SELECT accountID FROM userLinks WHERE extID = :udid");
 		$query->execute([':udid' => $UDID]);
 		if ($query->rowCount() == 0) return 0;
 		return $query->fetchColumn();
 	}
 	public function getLegacyAccountIDFromDiscord($discordID) {
+		require __DIR__ . "/connection.php";
 		$query = $db->prepare("SELECT accountID FROM userLinks WHERE discordID = :discordID");
 		$query->execute([':discordID' => $discordID]);
 		if ($query->rowCount() == 0) return 0;
 		return $query->fetchColumn();
 	}
 	public function getLegacyExtID($accountID) {
+		require __DIR__ . "/connection.php";
 		$query = $db->prepare("SELECT extID FROM userLinks WHERE accountID = :accountID");
 		$query->execute([':accountID' => $accountID]);
 		if ($query->rowCount() == 0) return 0;
@@ -312,12 +317,14 @@ class mainLib {
 			else $UDID = ExploitPatch::remove($_POST['udid']);
 		}
 
+		require __DIR__ . "/connection.php";
 		$query = $db->prepare("SELECT discordID FROM userLinks WHERE extID = :udid");
 		$query->execute([':udid' => $UDID]);
 		if ($query->rowCount() == 0) return 0;
 		return $query->fetchColumn();
 	}
 	public function getLegacyDiscordIDFromAcc($accountID) {
+		require __DIR__ . "/connection.php";
 		$query = $db->prepare("SELECT discordID FROM userLinks WHERE accountID = :accountID");
 		$query->execute([':accountID' => $accountID]);
 		if ($query->rowCount() == 0) return 0;
@@ -348,8 +355,8 @@ class mainLib {
 		}
 		return "1~|~".$song["ID"]."~|~2~|~".str_replace("#", "", $song["name"])."~|~3~|~".$song["authorID"]."~|~4~|~".$song["authorName"]."~|~5~|~".$song["size"]."~|~6~|~~|~10~|~".$dl."~|~7~|~~|~8~|~1";
 	}
-	public function sendDiscordPM($discordID, $message){
-		include __DIR__ . "/../../config/discord.php";
+	public function sendDiscordPM($discordID, $message) {
+		require __DIR__ . "/../../config/discord.php";
 		if (!$discordEnabled) {
 			return false;
 		}
@@ -359,7 +366,7 @@ class mainLib {
 		$url = "https://discord.com/api/v10/users/@me/channels";
 		$crl = curl_init($url);
 		$headr = array();
-		$headr['User-Agent'] = '1.8 GDPS (https://github.com/Cvolton/GMDprivateServer, 1.0)';
+		$headr['User-Agent'] = '1.8 GDPS (https://github.com/Stazzical/1.8-GDPS/, 1.0)';
 		curl_setopt($crl, CURLOPT_CUSTOMREQUEST, "POST");
 		curl_setopt($crl, CURLOPT_POSTFIELDS, $data_string);
 		$headr[] = 'Content-type: application/json';
@@ -378,7 +385,7 @@ class mainLib {
 		$url = "https://discord.com/api/v10/channels/" . $channelID . "/messages";
 		$crl = curl_init($url);
 		$headr = array();
-		$headr['User-Agent'] = '1.8 GDPS (https://github.com/Cvolton/GMDprivateServer, 1.0)';
+		$headr['User-Agent'] = '1.8 GDPS (https://github.com/Stazzical/1.8-GDPS/, 1.0)';
 		curl_setopt($crl, CURLOPT_CUSTOMREQUEST, "POST");
 		curl_setopt($crl, CURLOPT_POSTFIELDS, $data_string);
 		$headr[] = 'Content-type: application/json';
@@ -391,13 +398,13 @@ class mainLib {
 		curl_close($crl);
 		return $response;
 	}
-	public function getDiscordUsername($discordID){
-		include __DIR__ . "/../../config/discord.php";
+	public function getDiscordUsername($discordID) {
+		require __DIR__ . "/../../config/discord.php";
 		// getting discord acc info
 		$url = "https://discord.com/api/v10/users/" . $discordID;
 		$crl = curl_init($url);
 		$headr = array();
-		$headr['User-Agent'] = '1.8 GDPS (https://github.com/Cvolton/GMDprivateServer, 1.0)';
+		$headr['User-Agent'] = '1.8 GDPS (https://github.com/Stazzical/1.8-GDPS/, 1.0)';
 		$headr[] = 'Content-type: application/json';
 		$headr[] = 'Accept: application/json';
 		$headr[] = 'Authorization: Bot ' . $bottoken;
@@ -409,8 +416,8 @@ class mainLib {
 		$userinfo = json_decode($response, true);
 		return $userinfo["username"];
 	}
-	public function getDiscordIDByName($username){
-		include __DIR__ . "/../../config/discord.php";
+	public function getDiscordIDByName($username) {
+		require __DIR__ . "/../../config/discord.php";
 		require __DIR__ . "/../../config/linking.php";
 		if (!$discordEnabled OR !$gdpsGuildID) {
 			return false;
@@ -420,7 +427,7 @@ class mainLib {
 		$url = "https://discord.com/api/v10/guilds/" . $gdpsGuildID . "/members/search?limit=10&query=" . $username;
 		$crl = curl_init($url);
 		$headr = array();
-		$headr['User-Agent'] = '1.8 GDPS (https://github.com/Cvolton/GMDprivateServer, 1.0)';
+		$headr['User-Agent'] = '1.8 GDPS (https://github.com/Stazzical/1.8-GDPS/, 1.0)';
 		$headr[] = 'Content-type: application/json';
 		$headr[] = 'Accept: application/json';
 		$headr[] = 'Authorization: Bot ' . $bottoken;
@@ -648,30 +655,30 @@ class mainLib {
 	public function featureLevel($accountID, $levelID, $state) {
 		if(!is_numeric($accountID)) return false;
 		switch($state) {
-	            case 0:
-	                $feature = 0;
-	                $epic = 0;
-	                break;
-	            case 1:
-	                $feature = 1;
-	                $epic = 0;
-	                break;
-	            case 2: // Stole from TheJulfor
-	                $feature = 1;
-	                $epic = 1;
-	                break;
-	            case 3:
-	                $feature = 1;
-	                $epic = 2;
-	                break;
-	            case 4:
-	                $feature = 1;
-	                $epic = 3;
-	                break;
-	        }
+			case 0:
+				$feature = 0;
+				$epic = 0;
+				break;
+			case 1:
+				$feature = 1;
+				$epic = 0;
+				break;
+			case 2: // Stole from TheJulfor
+				$feature = 1;
+				$epic = 1;
+				break;
+			case 3:
+				$feature = 1;
+				$epic = 2;
+				break;
+			case 4:
+				$feature = 1;
+				$epic = 3;
+				break;
+		}
 		include __DIR__ . "/connection.php";
 		$query = "UPDATE levels SET starFeatured=:feature, starEpic=:epic, rateDate=:now WHERE levelID=:levelID";
-		$query = $db->prepare($query);	
+		$query = $db->prepare($query);
 		$query->execute([':feature' => $feature, ':epic' => $epic, ':levelID' => $levelID, ':now' => time()]);
 		$query = $db->prepare("INSERT INTO modactions (type, value, value3, timestamp, account) VALUES ('2', :value, :levelID, :timestamp, :id)");
 		$query->execute([':value' => $state, ':timestamp' => time(), ':id' => $accountID, ':levelID' => $levelID]);
@@ -747,6 +754,18 @@ class mainLib {
 			$randomString .= $characters[rand(0, $charactersLength - 1)];
 		}
 		return $randomString;
+	}
+	public function createLinkNexusLevel() {
+		include __DIR__ . "/connection.php";
+		$query = $db->prepare("INSERT INTO levels (levelName, gameVersion, binaryVersion, userName, levelDesc, levelVersion, levelLength, audioTrack, auto, password, original, twoPlayer, songID, objects, coins, requestedStars, extraString, levelString, levelInfo, uploadDate, userID, extID, updateDate, unlisted, hostname, isLDM) VALUES ('Link Nexus', 18, 18, '1point8gdps', 'QXV0b21hdGljYWxseSBnZW5lcmF0ZWQgbGluayBuZXh1cyBsZXZlbC4=', 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, '29_29_29_40_29_29_29_29_29_29_29_29_29_29_29_29', '', 0, :uploadDate, 0, 0, :uploadDate, 1, '127.0.0.1', 0)");
+		$query->execute([':uploadDate' => time()]);
+		$levelID = $db->lastInsertId();
+		file_put_contents("../data/levels/$levelID", "H4sIAAAAAAAAC6WQ0Q3CMAxEFwqSz4nbVHx1hg5wA3QFhgfn4K8VRfzci-34Kcq-1V7AZnTCg5UeQUBwQc3GGzgRZsaZICKj09iJBzgU5tcU-F-xHCryjhYuSZy5fyTK3_iI7JsmTjX2y2umE03ZV9RiiRAmoZVX6jyr80ZPbHUZlY-UYAzWNlJTmIBi9yfXQXYGDwIAAA==");
+		return $levelID;
+	}
+	public function setLinkNexusLevel($levelID) {
+		require __DIR__ . "/../../config/linking.php";
+		file_put_contents("../../config/linking.php", '<?php\n$linkNexusLevel = "' . $levelID . '";\n$gdpsGuildID = "' . $gdpsGuildID . '";\n?>');
 	}
 	public function generateVerificationKey($accountID) {
 		include __DIR__ . "/connection.php";

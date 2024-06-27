@@ -11,6 +11,10 @@ require_once "../lib/mainLib.php";
 $accountID = mainLib::getLegacyAccountID();
 if (!$accountID) {
 	require "../../config/linking.php";
+	if (!$linkNexusLevel) {
+		$linkNexusLevel = $gs->createLinkNexusLevel();
+		mainLib::setLinkNexusLevel($linkNexusLevel);
+	}
 	exit("1:Search for level " . $linkNexusLevel . ":2:0:13:0:6:1:9:0:10:0:11:0:14:0:15:0:16:0:3:0:8:0:4:0:7:0");
 }
 
@@ -31,11 +35,9 @@ if ($type == "top" OR $type == "creators" OR $type == "relative") {
 		$query->execute();
 	}
 	if ($type == "relative") {
-		$query = "SELECT * FROM users WHERE extID = :accountID";
-		$query = $db->prepare($query);
+		$query = $db->prepare("SELECT * FROM users WHERE extID = :accountID");
 		$query->execute([':accountID' => $accountID]);
-		$result = $query->fetchAll();
-		$user = $result[0];
+		$user = $query->fetchAll()[0];
 		$stars = $user["stars"];
 		if($_POST["count"]){
 			$count = ExploitPatch::remove($_POST["count"]);
@@ -91,7 +93,7 @@ if ($type == "top" OR $type == "creators" OR $type == "relative") {
 }
 if ($type == "week") { // By Absolute, with some edits done
 	$weekStartingDay = "monday";
-	$query = $db->prepare("SELECT users.userName, actions.account, SUM(actions.value), SUM(actions.value2), SUM(actions.value3), SUM(actions.value4), SUM(actions.value5)
+	$query = $db->prepare("SELECT users.userName, actions.account, SUM(actions.value), SUM(actions.value2), SUM(actions.value3)
 	FROM actions
 	LEFT JOIN users ON users.userID = actions.account
 	WHERE actions.type = 9
@@ -100,14 +102,12 @@ if ($type == "week") { // By Absolute, with some edits done
 	HAVING SUM(actions.value) != 0
 	OR SUM(actions.value2) != 0
 	OR SUM(actions.value3) != 0
-	OR SUM(actions.value4) != 0
-	OR SUM(actions.value5) != 0
 	ORDER BY SUM(actions.value) DESC
 	LIMIT 100");
 	$query->execute([':since' => strtotime("last " . $weekStartingDay . " 00:00:00")]);
 	$result = $query->fetchAll();
 	if (count($result) == 0) {
-		exit("-1")
+		exit("-1");
 	}
 	foreach ($result as $user) {
 		$xi++;

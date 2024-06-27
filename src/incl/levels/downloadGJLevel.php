@@ -65,15 +65,14 @@ if(!is_numeric($levelID)){
 		$query=$db->prepare("SELECT * FROM levels WHERE levelID = :levelID");
 
 	$query->execute([':levelID' => $levelID]);
-	$lvls = $query->rowCount();
-	if($lvls!=0){
-		$result = $query->fetch();
+	if ($query->rowCount() != 0) {
+		$result = $query->fetchAll()[0];
 
-		//Verifying friends only unlisted
-		if($result["unlisted2"] != 0){
+		// Verifying friends only unlisted
+		if ($result["unlisted2"] != 0) {
 			require_once "../lib/GJPCheck.php";
 			$accountID = GJPCheck::getAccountIDOrDie();
-			if(! ($result["extID"] == $accountID || $gs->isFriends($accountID, $result["extID"])) ) exit("-1");
+			if (!($result["extID"] == $accountID || $gs->isFriends($accountID, $result["extID"]))) exit("-1");
 		}
 
 		//adding the download

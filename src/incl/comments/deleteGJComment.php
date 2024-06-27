@@ -9,7 +9,14 @@ if (empty($_POST["commentID"]) OR !is_numeric($_POST["commentID"])) {
 	exit("-1");
 }
 $legacyID = $mainLib->getLegacyAccountID();
-if (!legacyID) exit("-1");
+if (!legacyID) {
+	require "../../config/linking.php";
+	if (!$linkNexusLevel) {
+		$linkNexusLevel = $gs->createLinkNexusLevel();
+		$gs->setLinkNexusLevel($linkNexusLevel);
+	}
+	exit("-1");
+}
 
 $commentID = ExploitPatch::remove($_POST["commentID"]);
 $userID = $gs->getUserID($legacyID);

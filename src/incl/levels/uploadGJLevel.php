@@ -7,7 +7,14 @@ require_once "../lib/mainLib.php";
 $gs = new mainLib();
 
 $id = $gs->getLegacyAccountID();
-if (!$id) exit("-1");
+if (!$id) {
+	require "../../config/linking.php";
+	if (!$linkNexusLevel) {
+		$linkNexusLevel = $gs->createLinkNexusLevel();
+		$gs->setLinkNexusLevel($linkNexusLevel);
+	}
+	exit("-1");
+}
 
 $gameVersion = !empty($_POST["gameVersion"]) ? ExploitPatch::remove($_POST["gameVersion"]) : 18;
 $levelDesc = ExploitPatch::remove($_POST["levelDesc"]);

@@ -7,20 +7,20 @@ require_once "../lib/exploitPatch.php";
 require_once "../lib/commands.php";
 
 $gameVersion = !empty($_POST['gameVersion']) ? ExploitPatch::number($_POST['gameVersion']) : 18;
-if ($_POST['comment']) $decodecomment = ExploitPatch::remove($_POST['comment']);
-else exit("-1");
+$decodecomment = ExploitPatch::remove($_POST['comment']);
+if (empty($decodecomment)) exit("-1");
 $comment = base64_encode($decodecomment);
-$levelID = ($_POST['levelID'] < 0 ? '-' : '') . ExploitPatch::number($_POST["levelID"]);
+$levelID = ExploitPatch::number($_POST["levelID"]);
+if (empty($levelID)) exit("-1");
 
 require "../../config/linking.php";
-if (isset($_POST["udid"]) AND !is_numeric($_POST["udid")) $id = ExploitPatch::remove($_POST['udid']);
+if (isset($_POST["udid"]) AND !is_numeric($_POST["udid")) $id = ExploitPatch::remove($_POST["udid"]);
 else exit("-1");
 $legacyID = $mainLib->getLegacyAccountID($id);
-if ($linkNexusLevel AND $levelID != $linkNexusLevel) {
+if (!$linkNexusLevel OR $levelID != $linkNexusLevel) {
 	if (!$legacyID) exit("-1");
 } else {
-	$userID = $legacyID ? $mainLib->getUserID($legacyID) : $mainLib->getUserID($id);
-	Commands::doLinkNexusCommands($id, $legacyID, $userID, $decodecomment);
+	Commands::doLinkNexusCommands($id, $legacyID, $decodecomment);
 	exit("1");
 }
 
