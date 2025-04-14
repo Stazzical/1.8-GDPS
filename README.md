@@ -13,7 +13,7 @@ See all documentation about this edition [here](Documentation.md).
 ### Credits
 
 - GMDprivateServer by Cvolton
-- Some code used here is taken from Dashbox/GDOpenServer (now discontinued, public archive available [here](https://github.com/Stazzical/dashbox-old/), by (mostly) me, ryzzica and Wyliemaster.
+- Some code used here is taken from Dashbox/GDOpenServer (now discontinued, public archive available [here](https://github.com/Stazzical/dashbox-old/)), by (mostly) me, ryzzica and Wyliemaster.
 
 ### GMDprivateServer Credits
 Base for account settings and the private messaging system by someguy28
