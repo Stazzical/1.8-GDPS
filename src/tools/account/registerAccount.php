@@ -27,8 +27,9 @@ if (isset($_POST["userName"]) AND isset($_POST["email"]) AND isset($_POST["passw
 				require_once "../../incl/lib/generatePass.php";
 				$query = $db->prepare("INSERT INTO accounts (userName, password, email, registerDate, isActive, gjp2) VALUES (:userName, :password, :email, :time, 1, :gjp2)");
 				$query->execute([':userName' => $userName, ':password' => password_hash($password, PASSWORD_DEFAULT), ':email' => $email, ':time' => time(), ':gjp2' => GeneratePass::GJP2hash($password)]);
+				$accountID = $db->lastInsertId();
 				
-				echo "Your account has successfully been registred!<br>";
+				echo "Your account has successfully been registered!<br>";
 				
 				require_once "../../incl/lib/mainLib.php";
 				$verificationKey = mainLib::generateVerificationKey($accountID);

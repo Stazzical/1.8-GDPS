@@ -4,7 +4,7 @@ include "../lib/connection.php";
 require_once "../lib/exploitPatch.php";
 require_once "../lib/mainLib.php";
 
-if (!isset($_POST['levelID']) OR !is_numeric($_POST['levelID']) exit("-1");
+if (!isset($_POST['levelID']) OR !is_numeric($_POST['levelID'])) exit("-1");
 $levelID =  ExploitPatch::remove($_POST["levelID"]);
 $ip = mainLib::getIP();
 

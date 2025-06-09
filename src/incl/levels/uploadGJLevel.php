@@ -21,15 +21,16 @@ $levelDesc = ExploitPatch::remove($_POST["levelDesc"]);
 if ($gameVersion < 20) {
 	$rawDesc = $levelDesc;
 } else {
-	$rawDesc = str_replace('-', '+', $levelDesc);
-	$rawDesc = str_replace('_', '/', $rawDesc);
+	$rawDesc = str_replace('_', '/', $levelDesc);
+	$rawDesc = str_replace('-', '+', $rawDesc);
 	$rawDesc = base64_decode($rawDesc);
 }
 
-$query = $db->prepare("SELECT value FROM (SELECT value, value3 FROM actions WHERE (type = '30' OR type = '31') AND timestamp > :timestamp AND account = :accountID ORDER BY timestamp DESC LIMIT 1) WHERE value3 < 3");
-$query->execute([':timestamp' => time() - 900, ':accountID' => $id]); // last generated key of any type from 15 minutes ago that has not been used already
+// last generated key of any type from 15 minutes ago that has not been used thrice already
+$query = $db->prepare("SELECT A.value FROM (SELECT value, value3 FROM actions WHERE (type = '30' OR type = '31') AND timestamp > :timestamp AND account = :accountID ORDER BY timestamp DESC LIMIT 1) as A WHERE A.value3 < 3");
+$query->execute([':timestamp' => time() - 900, ':accountID' => $id]);
 $verifyKey = $query->fetchColumn();
-if ($query->rowCount == 0 OR !substr_count($rawDesc, $verifyKey)) exit("-1");
+if (!$verifyKey OR !substr_count($rawDesc, $verifyKey)) exit("-1");
 $rawDesc = str_replace($verifyKey, "", $rawDesc);
 $gs->useAnyVerificationKey($id, $verifyKey);
 //TODO: move description fixing code to a function
@@ -107,12 +108,12 @@ if($levelString != "" AND $levelName != ""){
 	if($querye->rowCount() > 0){
 		$query = $db->prepare("UPDATE levels SET levelName=:levelName, gameVersion=:gameVersion, binaryVersion=:binaryVersion, userName=:userName, levelDesc=:levelDesc, levelVersion=:levelVersion, levelLength=:levelLength, audioTrack=:audioTrack, auto=:auto, password=:password, original=:original, twoPlayer=:twoPlayer, songID=:songID, objects=:objects, coins=:coins, requestedStars=:requestedStars, extraString=:extraString, levelString=:levelString, levelInfo=:levelInfo, secret=:secret, updateDate=:uploadDate, unlisted=:unlisted, hostname=:hostname, isLDM=:ldm, wt=:wt, wt2=:wt2, unlisted2=:unlisted2, settingsString=:settingsString, songIDs=:songIDs, sfxIDs=:sfxIDs, ts=:ts WHERE levelName=:levelName AND extID=:id");	
 		$query->execute([':levelName' => $levelName, ':gameVersion' => $gameVersion, ':binaryVersion' => $binaryVersion, ':userName' => $userName, ':levelDesc' => $levelDesc, ':levelVersion' => $levelVersion, ':levelLength' => $levelLength, ':audioTrack' => $audioTrack, ':auto' => $auto, ':password' => $password, ':original' => $original, ':twoPlayer' => $twoPlayer, ':songID' => $songID, ':objects' => $objects, ':coins' => $coins, ':requestedStars' => $requestedStars, ':extraString' => $extraString, ':levelString' => "", ':levelInfo' => $levelInfo, ':secret' => $secret, ':levelName' => $levelName, ':id' => $id, ':uploadDate' => $uploadDate, ':unlisted' => $unlisted, ':hostname' => $hostname, ':ldm' => $ldm, ':wt' => $wt, ':wt2' => $wt2, ':unlisted2' => $unlisted2, ':settingsString' => $settingsString, ':songIDs' => $songIDs, ':sfxIDs' => $sfxIDs, ':ts' => $ts]);
-		file_put_contents("../../data/levels/$levelID",$levelString);
+		file_put_contents("../../data/levels/$levelID", $levelString);
 		echo $levelID;
 	}else{
 		$query->execute([':levelName' => $levelName, ':gameVersion' => $gameVersion, ':binaryVersion' => $binaryVersion, ':userName' => $userName, ':levelDesc' => $levelDesc, ':levelVersion' => $levelVersion, ':levelLength' => $levelLength, ':audioTrack' => $audioTrack, ':auto' => $auto, ':password' => $password, ':original' => $original, ':twoPlayer' => $twoPlayer, ':songID' => $songID, ':objects' => $objects, ':coins' => $coins, ':requestedStars' => $requestedStars, ':extraString' => $extraString, ':levelString' => "", ':levelInfo' => $levelInfo, ':secret' => $secret, ':uploadDate' => $uploadDate, ':userID' => $gs->getUserID($id), ':id' => $id, ':unlisted' => $unlisted, ':hostname' => $hostname, ':ldm' => $ldm, ':wt' => $wt, ':wt2' => $wt2, ':unlisted2' => $unlisted2, ':settingsString' => $settingsString, ':songIDs' => $songIDs, ':sfxIDs' => $sfxIDs, ':ts' => $ts]);
 		$levelID = $db->lastInsertId();
-		file_put_contents("../../data/levels/$levelID",$levelString);
+		file_put_contents("../../data/levels/$levelID", $levelString);
 		echo $levelID;
 	}
 }else{

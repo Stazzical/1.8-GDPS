@@ -336,7 +336,8 @@ class mainLib {
 		$query->execute([':id' => $userID]);
 		$userdata = $query->fetch();*/
 		$extID = is_numeric($userdata['extID']) ? $userdata['extID'] : 0;
-		return "${userdata['userID']}:${userdata['userName']}:${extID}";
+		$userName = empty($userdata['userName']) ? $userdata['creatorName'] : $userdata['userName'];
+		return "${userdata['userID']}:${userName}:${extID}";
 	}
 	public function getSongString($song){
 		include __DIR__ . "/connection.php";
@@ -419,7 +420,8 @@ class mainLib {
 	public function getDiscordIDByName($username) {
 		require __DIR__ . "/../../config/discord.php";
 		require __DIR__ . "/../../config/linking.php";
-		if (!$discordEnabled OR !$gdpsGuildID) {
+		// this function requires you to set your GDPS Discord guild ID, have Discord enabled and your bot token set
+		if (!$discordEnabled OR !$bottoken OR !$gdpsGuildID) {
 			return false;
 		}
 		// your bot needs to be inside the $gdpsGuildID for this to work
@@ -757,15 +759,16 @@ class mainLib {
 	}
 	public function createLinkNexusLevel() {
 		include __DIR__ . "/connection.php";
-		$query = $db->prepare("INSERT INTO levels (levelName, gameVersion, binaryVersion, userName, levelDesc, levelVersion, levelLength, audioTrack, auto, password, original, twoPlayer, songID, objects, coins, requestedStars, extraString, levelString, levelInfo, uploadDate, userID, extID, updateDate, unlisted, hostname, isLDM) VALUES ('Link Nexus', 18, 18, '1point8gdps', 'QXV0b21hdGljYWxseSBnZW5lcmF0ZWQgbGluayBuZXh1cyBsZXZlbC4=', 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, '29_29_29_40_29_29_29_29_29_29_29_29_29_29_29_29', '', 0, :uploadDate, 0, 0, :uploadDate, 1, '127.0.0.1', 0)");
+		$query = $db->prepare("INSERT INTO levels (levelName, gameVersion, binaryVersion, userName, levelDesc, levelVersion, levelLength, audioTrack, auto, password, original, twoPlayer, songID, objects, coins, requestedStars, extraString, levelString, levelInfo, secret, uploadDate, userID, extID, updateDate, unlisted, hostname, isLDM, settingsString) VALUES ('Link Nexus', 18, 18, '1point8gdps', 'QXV0b21hdGljYWxseSBnZW5lcmF0ZWQgbGluayBuZXh1cyBsZXZlbC4=', 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, '29_29_29_40_29_29_29_29_29_29_29_29_29_29_29_29', '', 0, 'Wmfd2893gb7', :uploadDate, 0, 0, :uploadDate, 1, '127.0.0.1', 0, '')");
 		$query->execute([':uploadDate' => time()]);
 		$levelID = $db->lastInsertId();
-		file_put_contents("../data/levels/$levelID", "H4sIAAAAAAAAC6WQ0Q3CMAxEFwqSz4nbVHx1hg5wA3QFhgfn4K8VRfzci-34Kcq-1V7AZnTCg5UeQUBwQc3GGzgRZsaZICKj09iJBzgU5tcU-F-xHCryjhYuSZy5fyTK3_iI7JsmTjX2y2umE03ZV9RiiRAmoZVX6jyr80ZPbHUZlY-UYAzWNlJTmIBi9yfXQXYGDwIAAA==");
+		file_put_contents("../../data/levels/$levelID", "H4sIAAAAAAAAC6WQ0Q3CMAxEFwqSz4nbVHx1hg5wA3QFhgfn4K8VRfzci-34Kcq-1V7AZnTCg5UeQUBwQc3GGzgRZsaZICKj09iJBzgU5tcU-F-xHCryjhYuSZy5fyTK3_iI7JsmTjX2y2umE03ZV9RiiRAmoZVX6jyr80ZPbHUZlY-UYAzWNlJTmIBi9yfXQXYGDwIAAA==");
 		return $levelID;
 	}
 	public function setLinkNexusLevel($levelID) {
 		require __DIR__ . "/../../config/linking.php";
-		file_put_contents("../../config/linking.php", '<?php\n$linkNexusLevel = "' . $levelID . '";\n$gdpsGuildID = "' . $gdpsGuildID . '";\n?>');
+		// single quote strings don't parse anything inside them so they're safe for variable names
+		file_put_contents("../../config/linking.php", '<?php' . "\n" . '$linkNexusLevel = "' . $levelID . '";' . "\n" . '$gdpsGuildID = "' . $gdpsGuildID . '";' . "\n" . '?>');
 	}
 	public function generateVerificationKey($accountID) {
 		include __DIR__ . "/connection.php";

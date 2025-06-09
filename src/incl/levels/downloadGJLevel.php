@@ -60,9 +60,9 @@ if(!is_numeric($levelID)){
 	}
 	//downloading the level
 	if($daily == 1)
-		$query=$db->prepare("SELECT levels.*, users.userName, users.extID FROM levels LEFT JOIN users ON levels.userID = users.userID WHERE levelID = :levelID");
+		$query = $db->prepare("SELECT levels.*, users.userName, users.extID, levels.userName as creatorName FROM levels LEFT JOIN users ON levels.userID = users.userID WHERE levelID = :levelID");
 	else
-		$query=$db->prepare("SELECT * FROM levels WHERE levelID = :levelID");
+		$query = $db->prepare("SELECT * FROM levels WHERE levelID = :levelID");
 
 	$query->execute([':levelID' => $levelID]);
 	if ($query->rowCount() != 0) {
@@ -79,7 +79,7 @@ if(!is_numeric($levelID)){
 		$query6 = $db->prepare("SELECT COUNT(*) FROM actions_downloads WHERE levelID=:levelID AND ip=INET6_ATON(:ip)");
 		$query6->execute([':levelID' => $levelID, ':ip' => $ip]);
 		if($inc && $query6->fetchColumn() < 2){
-			$query2=$db->prepare("UPDATE levels SET downloads = downloads + 1 WHERE levelID = :levelID");
+			$query2 = $db->prepare("UPDATE levels SET downloads = downloads + 1 WHERE levelID = :levelID");
 			$query2->execute([':levelID' => $levelID]);
 			$query6 = $db->prepare("INSERT INTO actions_downloads (levelID, ip) VALUES (:levelID, INET6_ATON(:ip))");
 			$query6->execute([':levelID' => $levelID, ':ip' => $ip]);
@@ -97,7 +97,9 @@ if(!is_numeric($levelID)){
 		if($gameVersion > 19){
 			if($pass != 0) $xorPass = base64_encode(XORCipher::cipher($pass,26364));
 		}else{
-			$desc = ExploitPatch::remove(base64_decode($desc));
+			$desc = str_replace('_', '/', $desc);
+			$desc = str_replace('-', '+', $desc);
+			$desc = base64_decode($desc);
 		}
 		//submitting data
 		if(file_exists("../../data/levels/$levelID")){
@@ -106,10 +108,10 @@ if(!is_numeric($levelID)){
 			$levelstring = $result["levelString"];
 		}
 		if($gameVersion > 18){
-			if(substr($levelstring,0,3) == 'kS1'){
+			if(substr($levelstring, 0, 3) == 'kS1'){
 				$levelstring = base64_encode(gzcompress($levelstring));
-				$levelstring = str_replace("/","_",$levelstring);
-				$levelstring = str_replace("+","-",$levelstring);
+				$levelstring = str_replace("/", "_", $levelstring);
+				$levelstring = str_replace("+", "-", $levelstring);
 			}
 		}
 		$response = "1:".$result["levelID"].":2:".$result["levelName"].":3:".$desc.":4:".$levelstring.":5:".$result["levelVersion"].":6:".$result["userID"].":8:10:9:".$result["starDifficulty"].":10:".$result["downloads"].":11:1:12:".$result["audioTrack"].":13:".$result["gameVersion"].":14:".$result["likes"].":17:".$result["starDemon"].":43:".$result["starDemonDiff"].":25:".$result["starAuto"].":18:".$result["starStars"].":19:".$result["starFeatured"].":42:".$result["starEpic"].":45:".$result["objects"].":15:".$result["levelLength"].":30:".$result["original"].":31:".$result['twoPlayer'].":28:".$uploadDate. ":29:".$updateDate. ":35:".$result["songID"].":36:".$result["extraString"].":37:".$result["coins"].":38:".$result["starCoins"].":39:".$result["requestedStars"].":46:".$result["wt"].":47:".$result["wt2"].":48:".$result["settingsString"].":40:".$result["isLDM"].":27:$xorPass:52:".$result["songIDs"].":53:".$result["sfxIDs"].":57:".$result['ts'];

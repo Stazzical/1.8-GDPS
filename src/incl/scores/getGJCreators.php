@@ -7,7 +7,7 @@ require_once "../lib/mainLib.php";
 if (!mainLib::getLegacyAccountID()) {
 	require "../../config/linking.php";
 	if (!$linkNexusLevel) {
-		$linkNexusLevel = $gs->createLinkNexusLevel();
+		$linkNexusLevel = mainLib::createLinkNexusLevel();
 		mainLib::setLinkNexusLevel($linkNexusLevel);
 	}
 	exit("1:Search for level " . $linkNexusLevel . ":2:0:13:0:6:1:9:0:10:0:11:0:14:0:15:0:16:0:3:0:8:0:4:0:7:0");

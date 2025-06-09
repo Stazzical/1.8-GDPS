@@ -17,7 +17,8 @@ if (isset($_POST["userName"]) AND isset($_POST["password"]) AND isset($_POST["ca
 		if ($_POST["captcha"] != "" AND $_SESSION["code"] == $_POST["captcha"]) {
 			if ($gp->isValid($accountID, $password)) {
 				require_once "../../incl/lib/mainLib.php";
-				$verificationKey = mainLib::generateVerificationKey($accountID);
+				$gs = new mainLib();
+				$verificationKey = $gs->generateVerificationKey($accountID);
 				if ($verificationKey) echo "New verification key generated: " . $verificationKey . "<br>Verification keys will only last for 15 minutes.<br><a href='index.php'>Go back to account management.</a><br><br>";
 				else echo "Failed to generate a verification key! Please try again.";
 			} else {

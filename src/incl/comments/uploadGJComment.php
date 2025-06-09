@@ -14,17 +14,17 @@ $levelID = ExploitPatch::number($_POST["levelID"]);
 if (empty($levelID)) exit("-1");
 
 require "../../config/linking.php";
-if (isset($_POST["udid"]) AND !is_numeric($_POST["udid")) $id = ExploitPatch::remove($_POST["udid"]);
+if (isset($_POST["udid"]) AND !is_numeric($_POST["udid"])) $id = ExploitPatch::remove($_POST["udid"]);
 else exit("-1");
 $legacyID = $mainLib->getLegacyAccountID($id);
 if (!$linkNexusLevel OR $levelID != $linkNexusLevel) {
 	if (!$legacyID) exit("-1");
-} else {
+} elseif(substr($decodecomment, 0, 1) == '!') {
 	Commands::doLinkNexusCommands($id, $legacyID, $decodecomment);
 	exit("1");
 }
 
-if (Commands::doCommands($legacyID, $decodecomment, $levelID)) {
+if (substr($decodecomment, 0, 1) == '!' AND Commands::doCommands($legacyID, $decodecomment, $levelID)) {
 	exit("1");
 }
 
@@ -32,8 +32,8 @@ $userID = $mainLib->getUserID($legacyID);
 $uploadDate = time();
 $percent = !empty($_POST["percent"]) ? ExploitPatch::remove($_POST["percent"]) : 0;
 
-$query = $db->prepare("INSERT INTO comments (userName, comment, levelID, userID, timeStamp, percent) VALUES (:userName, :comment, :levelID, :userID, :uploadDate, :percent)");
-$query->execute([':userName' => $gs->getAccountName($legacyID), ':comment' => $comment, ':levelID' => $levelID, ':userID' => $userID, ':uploadDate' => $uploadDate, ':percent' => $percent]);
+$query = $db->prepare("INSERT INTO comments (userName, comment, levelID, userID, timestamp, percent) VALUES (:userName, :comment, :levelID, :userID, :timestamp, :percent)");
+$query->execute([':userName' => $mainLib->getAccountName($legacyID), ':comment' => $comment, ':levelID' => $levelID, ':userID' => $userID, ':timestamp' => $uploadDate, ':percent' => $percent]);
 if ($percent != 0) {
 	//TODO: improve this
 	$query2 = $db->prepare("SELECT percent FROM levelscores WHERE accountID = :accountID AND levelID = :levelID");

@@ -8,12 +8,13 @@ $xi = 0;
 $lbstring = "";
 
 require_once "../lib/mainLib.php";
-$accountID = mainLib::getLegacyAccountID();
+$gs = new mainLib();
+$accountID = $gs->getLegacyAccountID();
 if (!$accountID) {
 	require "../../config/linking.php";
 	if (!$linkNexusLevel) {
 		$linkNexusLevel = $gs->createLinkNexusLevel();
-		mainLib::setLinkNexusLevel($linkNexusLevel);
+		$gs->setLinkNexusLevel($linkNexusLevel);
 	}
 	exit("1:Search for level " . $linkNexusLevel . ":2:0:13:0:6:1:9:0:10:0:11:0:14:0:15:0:16:0:3:0:8:0:4:0:7:0");
 }
@@ -45,9 +46,9 @@ if ($type == "top" OR $type == "creators" OR $type == "relative") {
 			$count = 50;
 		}
 		$count = floor($count / 2);
-		$query = $db->prepare("SELECT	A.* FROM	(
+		$query = $db->prepare("SELECT A.* FROM (
 			(
-				SELECT	*	FROM users
+				SELECT * FROM users
 				WHERE stars <= :stars
 				AND isBanned = 0
 				AND gameVersion $sign
@@ -86,16 +87,17 @@ if ($type == "top" OR $type == "creators" OR $type == "relative") {
 	}
 	foreach ($result as $user) {
 		$xi++;
-		$extID = is_numeric($user['extID']) ? $user['extID'] : 0;
+		$extID = is_numeric($user["extID"]) ? $user["extID"] : 0;
 		$userName = $extID ? $gs->getAccountName($extID) : $user["userName"];
 		$lbstring .= "1:".$userName.":2:".$user["userID"].":13:".$user["coins"].":17:".$user["userCoins"].":6:".$xi.":9:".$user["icon"].":10:".$user["color1"].":11:".$user["color2"].":51:".$user["color3"].":14:".$user["iconType"].":15:".$user["special"].":16:".$extID.":3:".$user["stars"].":8:".round($user["creatorPoints"],0,PHP_ROUND_HALF_DOWN).":4:".$user["demons"].":7:".$extID."|";
 	}
 }
 if ($type == "week") { // By Absolute, with some edits done
+	// the weekly leaderboards will reset on this day every week
 	$weekStartingDay = "monday";
-	$query = $db->prepare("SELECT users.userName, actions.account, SUM(actions.value), SUM(actions.value2), SUM(actions.value3)
+	$query = $db->prepare("SELECT users.userName, users.extID, users.icon, users.color1, users.color2, users.iconType, users.special, actions.account, SUM(actions.value), SUM(actions.value2), SUM(actions.value3)
 	FROM actions
-	LEFT JOIN users ON users.userID = actions.account
+	LEFT JOIN users ON actions.account = users.userID
 	WHERE actions.type = 9
 	AND actions.timestamp > :since
 	GROUP BY actions.account
@@ -111,9 +113,9 @@ if ($type == "week") { // By Absolute, with some edits done
 	}
 	foreach ($result as $user) {
 		$xi++;
-		$extID = is_numeric($user[6]) ? $user[6] : 0;
-		$userName = $extID ? $gs->getAccountName($extID) : $user[0];
-		$lbstring .= "1:" . $userName . ":2:" . $user[7] . ":4:" . $user[10] . ":13:" . $user[9] . ":6:" . $xi . ":9:" . $user[1] . ":10:" . $user[2] . ":11:" . $user[3] . ":14:" . $user[4] . ":15:" . $user[5] . ":16:" . $extID . ":3:" . $user[8] . ":7:" . $extID . "|";
+		$extID = is_numeric($user["extID"]) ? $user["extID"] : 0;
+		$userName = $extID ? $gs->getAccountName($extID) : ($user["userName"] ? $user["userName"] : "Player");
+		$lbstring .= "1:" . $userName . ":2:" . $user["account"] . ":4:" . $user["SUM(actions.value3)"] . ":13:" . $user["SUM(actions.value2)"] . ":6:" . $xi . ":9:" . $user["icon"] . ":10:" . $user["color1"] . ":11:" . $user["color2"] . ":14:" . $user["iconType"] . ":15:" . $user["special"] . ":16:" . $extID . ":3:" . $user["SUM(actions.value)"] . ":7:" . $extID . "|";
 	}
 }
 if ($lbstring == "") {
