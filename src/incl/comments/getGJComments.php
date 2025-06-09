@@ -27,37 +27,37 @@ require "../../config/linking.php";
 // if this check passes, it will always end up in an exit and the rest of the code won't parse, so we don't have to bother with some of the things
 // only up to one page and up to 10 comments will be shown because I hate working with pagination.
 if ($linkNexusLevel AND $levelID == $linkNexusLevel) {
-	if (!$userID) exit("2~userID not provided. Information will be unavailable.~3~0~4~0~5~0~7~0~9~Automated~6~" . $botcommentcount . "~10~0#0:Information:0#1:0:1");
+	if (!$userID) exit("2~userID not provided. Information will be unavailable.~3~0~4~0~5~0~7~0~9~Automated~6~0~10~0#0:Information:0#1:0:1");
 	
 	$UDID = $gs->getExtID($userID);
-	if (!$UDID) exit("2~A non-existent userID has been provided. Information will be unavailable.~3~0~4~0~5~0~7~0~9~Automated~6~" . $botcommentcount . "~10~0#0:Information:0#1:0:1");
+	if (!$UDID) exit("2~A non-existent userID has been provided. Information will be unavailable.~3~0~4~0~5~0~7~0~9~Automated~6~0~10~0#0:Information:0#1:0:1");
 	if (is_numeric($UDID)) {
 		$legacyID = $UDID;
 		$UDID = $gs->getLegacyExtID($legacyID);
-		if (!$UDID) exit("2~Your userID has a non-linked account tied to it. Information will be unavailable.~3~0~4~0~5~0~7~0~9~Automated~6~" . $botcommentcount . "~10~0#0:Information:0#1:0:1");
+		if (!$UDID) exit("2~Your userID has a non-linked account tied to it. Information will be unavailable.~3~0~4~0~5~0~7~0~9~Automated~6~0~10~0#0:Information:0#1:0:1");
 	}
 	
 	// fetching recent link nexus bot comments
 	// only the ones from 5 minutes ago are shown, amounts depends on the value of $count minus the last reserved comment
 	// query needs to reorder the comments for the newer ones to show at top of the list
-	$query = $db->prepare("SELECT A.* FROM (SELECT value, timestamp FROM actions WHERE type = '32' AND timestamp >= :time AND account = :userID AND value2 = :linkNexus ORDER BY timestamp DESC LIMIT " . ($count - 1) . ") as A ORDER BY A.timestamp ASC");
+	$query = $db->prepare("SELECT value, timestamp FROM actions WHERE type = '32' AND timestamp >= :time AND account = :userID AND value2 = :linkNexus ORDER BY timestamp DESC LIMIT " . ($count - 1));
 	$query->execute([':time' => time() - 300, ':userID' => $userID, ':linkNexus' => $linkNexusLevel]);
 	$botcommenttotal = $query->rowCount();
 	$result = $query->fetchAll();
 	foreach ($result as $comment) {
 		$uploadDate = $gs->makeTime($comment["timestamp"]);
 		$commentText = ($gameVersion > 20) ? base64_encode($comment["value"]) : $comment["value"];
-		echo "2~" . $commentText . "~3~0~4~0~5~0~7~0~9~" . $uploadDate . "~6~" . $botcommentcount . "~10~0|";
+		echo "2~" . $commentText . "~3~0~4~0~5~0~7~0~9~" . $uploadDate . "~6~0~10~0|";
 		$botcommentcount--;
 	}
 	
 	// the 10th comment is reserved to display current link information
 	$legacyID = $legacyID ? $legacyID : $gs->getLegacyAccountID($UDID);
-	if (!$legacyID) exit("2~You haven't linked your account yet!~3~0~4~0~5~0~7~0~9~Automated~6~" . $botcommentcount . "~10~0#0:Information:0#" . (abs($botcommentcount) + 1) . ":0:" . ($botcommenttotal + 1));
+	if (!$legacyID) exit("2~You currently have no linked account. Comment '!link' to get started.~3~0~4~0~5~0~7~0~9~Automated~6~0~10~0#0:Information:0#" . (abs($botcommentcount) + 1) . ":0:" . ($botcommenttotal + 1));
 	echo "2~Linked account - " . $gs->getAccountName($legacyID);
 	$discordID = $gs->getLegacyDiscordID($UDID);
 	if ($discordID) echo " --- Linked Discord - " . $gs->getDiscordUsername($discordID); else echo " --- Discord not linked";
-	exit("~3~0~4~0~5~0~7~0~9~Automated~6~" . $botcommentcount . "~10~0#0:Information:0#" . (abs($botcommentcount) + 1) . ":0:" . ($botcommenttotal + 1));
+	exit("~3~0~4~0~5~0~7~0~9~Automated~6~0~10~0#0:Information:0#" . (abs($botcommentcount) + 1) . ":0:" . ($botcommenttotal + 1));
 }
 if ($userID) {
 	$id = $gs->getExtID($userID);
@@ -82,19 +82,19 @@ $commentcountfinal += $commentcount;
 $userstring = "";
 $users = array();
 
-if ($userID) {
+if ($userID AND $page == 0) {
 	// fetching recent level bot comments (e.g. command responses and errors)
 	// only the ones from 5 minutes are shown, amount is based on how many $count allows
 	$query = $db->prepare("SELECT A.* FROM (SELECT value, timestamp FROM actions WHERE type = '32' AND timestamp >= :timestamp AND account = :userID AND value2 = :levelID ORDER BY timestamp DESC LIMIT " . ($count - $reservedcommentcount) . ") as A ORDER BY A.timestamp ASC");
 	$query->execute([':timestamp' => time() - 300, ':userID' => $userID, ':levelID' => $levelID]);
 	$querycount = $query->rowCount();
-	if ($page == 0 AND $querycount != 0) {
+	if ($querycount != 0) {
 		$botcommenttotal += $query->rowCount();
 		$result = $query->fetchAll();
 		foreach ($result as $comment) {
 			$uploadDate = $gs->makeTime($comment["timestamp"]);
 			$commentText = ($gameVersion > 20) ? base64_encode($comment["value"]) : $comment["value"];
-			$commentstring .= "2~" . $commentText . "~3~0~4~0~5~0~7~0~9~" . $uploadDate . "~6~" . $botcommentcount . "~10~0|";
+			$commentstring .= "2~" . $commentText . "~3~0~4~0~5~0~7~0~9~" . $uploadDate . "~6~0~10~0|";
 			$commentcountfinal++;
 			$botcommentcount--;
 		}
@@ -103,8 +103,8 @@ if ($userID) {
 				$linkNexusLevel = $gs->createLinkNexusLevel();
 				$gs->setLinkNexusLevel($linkNexusLevel);
 			}
-			$commentstring .= "2~Please search for level ID '" . $linkNexusLevel . "' to begin linking your account.~3~0~4~0~5~0~7~0~9~Automated~6~" . $botcommentcount . "~10~0|";
-			$commentstring .= "2~Your current user does not have an account linked to it. Some functionality may be unavailable.~3~0~4~0~5~0~7~0~9~Automated~6~" . ($botcommentcount - 1) . "~10~0|";
+			$commentstring .= "2~Please search for level ID '" . $linkNexusLevel . "' to begin linking your account.~3~0~4~0~5~0~7~0~9~Automated~6~0~10~0|";
+			$commentstring .= "2~Your current user does not have an account linked to it. Some functionality may be unavailable.~3~0~4~0~5~0~7~0~9~Automated~6~0~10~0|";
 			$commentcountfinal += 2;
 			$botcommentcount -= 2;
 		}
